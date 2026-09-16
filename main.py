@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 app = FastAPI(title="Expense Ledger Service")
 
-DB_FILE = os.getenv("DB_FILE", "ledger.db")
+DB_FILE = os.getenv("DB_FILE", "/tmp/ledger.db" if os.environ.get("VERCEL") else "ledger.db")
 
 USERS = {
     "token_user_1": {"id": 1, "username": "alice"},
@@ -76,6 +76,10 @@ class PaymentCreate(BaseModel):
     recipient: str = Field(..., min_length=2, max_length=50)
     amount: float = Field(..., gt=0)
     currency: str = Field(..., min_length=3, max_length=3)
+
+@app.get("/")
+def root():
+    return {"message": "Expense Ledger API is live", "docs": "/docs", "health": "/health"}
 
 @app.post("/payments", status_code=status.HTTP_201_CREATED)
 def create_payment(
