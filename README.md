@@ -1,5 +1,3 @@
-Repo ke liye complete aur professional README.md:
-
 Markdown
 # Expense Ledger & Payment Service
 
