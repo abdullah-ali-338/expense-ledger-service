@@ -1,4 +1,3 @@
-Markdown
 # Expense Ledger & Payment Service
 
 A production-ready HTTP microservice providing strict tenant isolation, retry-safe write operations, actionable input diagnostics, and automated test coverage.
