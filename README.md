@@ -58,7 +58,7 @@ Supported currencies: `USD`, `EUR`, `GBP`, `PKR`.
 
 ```bash
 # Clone the repository
-git clone [https://github.com/abdullah-ali-338/expense-ledger-service.git](https://github.com/abdullah-ali-338/expense-ledger-service.git)
+git clone: https://github.com/abdullah-ali-338/expense-ledger-service.git
 cd expense-ledger-service
 
 # Install dependencies
