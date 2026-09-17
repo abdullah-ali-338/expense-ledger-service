@@ -132,11 +132,13 @@ def create_payment(
         new_id = cursor.lastrowid
 
         return {
+            
             "id": new_id,
             "recipient": payload.recipient.strip(),
             "amount": payload.amount,
             "currency": clean_currency,
             "idempotency_key": idempotency_key
+            
         }
 
 @app.get("/payments")
