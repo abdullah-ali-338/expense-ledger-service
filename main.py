@@ -12,6 +12,7 @@ DB_FILE = os.getenv("DB_FILE", "/tmp/ledger.db" if os.environ.get("VERCEL") else
 
 ALLOWED_CURRENCIES = {"USD", "EUR", "GBP", "PKR"}
 
+
 USERS = {
     
     "token_user_1": {"id": 1, "username": "alice"},
