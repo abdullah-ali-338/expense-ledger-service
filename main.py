@@ -10,6 +10,8 @@ app = FastAPI(title="Expense Ledger Service")
 
 DB_FILE = os.getenv("DB_FILE", "/tmp/ledger.db" if os.environ.get("VERCEL") else "ledger.db")
 
+ALLOWED_CURRENCIES = {"USD", "EUR", "GBP", "PKR"}
+
 USERS = {
     "token_user_1": {"id": 1, "username": "alice"},
     "token_user_2": {"id": 2, "username": "bob"}
@@ -35,6 +37,7 @@ def init_db():
                 UNIQUE(user_id, idempotency_key)
             );
         """)
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_payments_user_id_id_desc ON payments(user_id, id DESC);")
         conn.commit()
 
 init_db()
@@ -46,10 +49,15 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     msg = errors[0]["msg"] if errors else "Invalid input"
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        content={"error": f"Invalid field '{field_name}': {msg}", "field": str(field_name), "suggestion": "Check field format and constraints."}
+        content={
+            "error": f"Invalid field '{field_name}': {msg}",
+            "field": str(field_name),
+            "suggestion": "Check field format and constraints."
+        }
     )
 
 def authenticate_user(authorization: Optional[str] = Header(None)):
+    """Authenticate incoming requests using a Bearer token."""
     if not authorization:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -79,6 +87,7 @@ class PaymentCreate(BaseModel):
 
 @app.get("/")
 def root():
+    """Root status ping with endpoint navigation."""
     return {"message": "Expense Ledger API is live", "docs": "/docs", "health": "/health"}
 
 @app.post("/payments", status_code=status.HTTP_201_CREATED)
@@ -87,6 +96,7 @@ def create_payment(
     idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
     current_user: dict = Depends(authenticate_user)
 ):
+    """Create a payment record with tenant isolation and idempotency checks."""
     if not idempotency_key or not idempotency_key.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -94,7 +104,7 @@ def create_payment(
         )
 
     clean_currency = payload.currency.strip().upper()
-    if clean_currency not in ["USD", "EUR", "GBP", "PKR"]:
+    if clean_currency not in ALLOWED_CURRENCIES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unsupported currency '{payload.currency}'. Must be one of USD, EUR, GBP, PKR."
@@ -131,6 +141,7 @@ def create_payment(
 
 @app.get("/payments")
 def list_payments(current_user: dict = Depends(authenticate_user)):
+    """Retrieve all payments belonging to the authenticated tenant."""
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -142,6 +153,7 @@ def list_payments(current_user: dict = Depends(authenticate_user)):
 
 @app.get("/payments/{payment_id}")
 def get_payment(payment_id: int, current_user: dict = Depends(authenticate_user)):
+    """Retrieve a single payment scoped strictly to the authenticated tenant."""
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -158,4 +170,5 @@ def get_payment(payment_id: int, current_user: dict = Depends(authenticate_user)
 
 @app.get("/health")
 def health_check():
+    """Service health probe."""
     return {"status": "ok"}
