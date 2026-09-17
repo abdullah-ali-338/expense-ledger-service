@@ -170,6 +170,7 @@ def get_payment(payment_id: int, current_user: dict = Depends(authenticate_user)
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Payment {payment_id} not found or access denied."
             )
+            
         return dict(row)
 
 @app.get("/health")
