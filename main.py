@@ -169,6 +169,7 @@ def get_payment(payment_id: int, current_user: dict = Depends(authenticate_user)
         return dict(row)
 
 @app.get("/health")
+
 def health_check():
     """Service health probe."""
     return {"status": "ok"}
