@@ -13,10 +13,8 @@ DB_FILE = os.getenv("DB_FILE", "/tmp/ledger.db" if os.environ.get("VERCEL") else
 ALLOWED_CURRENCIES = {"USD", "EUR", "GBP", "PKR"}
 
 USERS = {
-    
     "token_user_1": {"id": 1, "username": "alice"},
-    "token_user_2": {"id": 2, "username": "bob"}
-    
+    "token_user_2": {"id": 2, "username": "bob"} 
 }
 
 def get_db():
