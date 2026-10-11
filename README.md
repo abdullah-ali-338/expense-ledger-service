@@ -1,71 +1,39 @@
-# Expense Ledger & Payment Service
+# 💸 Expense Ledger & Payment Service
+
+![License](https://img.shields.io/badge/License-Personal_Use-blue?style=for-the-badge)
+![Tech Stack](https://img.shields.io/badge/Stack-FastAPI_%7C_SQLite_%7C_Pytest-orange?style=for-the-badge)
 
 A production-ready HTTP microservice providing strict tenant isolation, retry-safe write operations, actionable input diagnostics, and automated test coverage.
 
-- **Live URL:** https://expense-ledger-service.vercel.app
-- **Interactive API Docs:** https://expense-ledger-service.vercel.app/docs
+---
+
+## ✨ Features
+
+- **Strict Tenant Isolation:** Bearer token authentication ensures database queries filter strictly by `WHERE user_id = current_user.id`. Cross-tenant record attempts return HTTP `404 Not Found` to eliminate data leakage.
+- **Retry-Safe Write Operations:** Idempotent payment processing via `Idempotency-Key` headers backed by storage-level `UNIQUE(user_id, idempotency_key)` constraints.
+- **Actionable Input Diagnostics:** Detailed HTTP `400 Bad Request` messages pinpoint offending input fields and missing headers.
+- **Zero-Secret Codebase:** Environment-driven configurations with zero hardcoded credentials or database keys.
+- **Automated Verification:** Comprehensive test suite validating security boundary enforcement and idempotency guarantees.
 
 ---
 
-## Acceptance Criteria Verification
+## 🛠️ Tech Stack
 
-### 1. Authentication & Tenant Isolation
-- Protected endpoints require an `Authorization: Bearer <token>` header. Requests lacking valid credentials immediately reject with HTTP `401 Unauthorized`.
-- Every database query strictly filters by `WHERE user_id = current_user.id`. One user cannot read, query, or alter records belonging to another tenant.
-- Cross-tenant access attempts return HTTP `404 Not Found` to prevent data leakage.
-- Automated verification: `test_service.py:test_user_cannot_access_another_users_rows`.
-
-### 2. Retry-Safe Write Path (Idempotency)
-- Critical write endpoint: `POST /payments`.
-- Repeats are recognized using the client-provided `Idempotency-Key` HTTP header.
-- When an identical `Idempotency-Key` is received for the same authenticated user, the service intercepts the request, avoids creating a duplicate database row, and returns the original stored record with HTTP `200 OK`.
-- Database integrity is enforced at storage level via a `UNIQUE(user_id, idempotency_key)` constraint.
-- Automated verification: `test_service.py:test_idempotent_retry_returns_original_record`.
-
-### 3. Actionable Errors
-- Malformed payloads or invalid inputs return descriptive HTTP `400 Bad Request` responses indicating the exact offending field along with actionable instructions to fix the request.
-- Missing headers (`Idempotency-Key`) and invalid currencies return specific diagnostic messages rather than generic error codes.
-
-### 4. Zero Committed Secrets
-- Configuration parameters and database paths are loaded via runtime environment variables. No credentials or secrets exist within the repository.
+- **Framework:** FastAPI
+- **Database:** SQLite
+- **Validation:** Pydantic
+- **Testing:** Pytest
+- **Server:** Uvicorn
 
 ---
 
-## API Reference
+## 📁 Repository Structure
 
-| Method | Endpoint | Auth | Headers | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/` | No | None | Root status ping |
-| `GET` | `/health` | No | None | System health check |
-| `POST` | `/payments` | Yes | `Idempotency-Key: <key>` | Dispatches a payment record safely |
-| `GET` | `/payments` | Yes | None | Retrieves all payments for the active user |
-| `GET` | `/payments/{id}` | Yes | None | Fetches a specific payment by ID |
-
----
-
-## Test Credentials
-
-Use these tokens for testing authentication and tenant isolation:
-
-- **User 1 (Alice):** `Authorization: Bearer token_user_1`
-- **User 2 (Bob):** `Authorization: Bearer token_user_2`
-
-Supported currencies: `USD`, `EUR`, `GBP`, `PKR`.
-
----
-
-## Local Setup & Automated Testing
-
-```bash
-# Clone the repository
-git clone: https://github.com/abdullah-ali-338/expense-ledger-service.git
-cd expense-ledger-service
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run automated tests
-python -m pytest test_service.py
-
-# Run local development server
-python -m uvicorn main:app --reload
+```text
+ExpenseLedgerService/
+├── main.py             # Route handlers and authentication middleware
+├── database.py         # Connection pooling, tables, and unique constraints
+├── schemas.py          # Pydantic input models and validation rules
+├── test_service.py     # Automated test suite for auth and idempotency
+├── requirements.txt    # Python dependencies
+└── README.md           # Documentation
